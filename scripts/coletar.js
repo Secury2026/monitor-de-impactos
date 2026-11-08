@@ -526,19 +526,20 @@ function calcularRelevancia(titulo, resumo, fonte) {
     }
   }
 
+    // ==========================================================
+  // 2. ÂNCORAS — o "assunto real" da notícia
   // ==========================================================
-  // 2. ÂNCORAS — o "assunto real" (usa EVENTOS_OPERACIONAIS)
-  // ==========================================================
- const ancorasEncontradas = [];
+  const ancorasEncontradas = [];
   for (const [tema, config] of Object.entries(EVENTOS_OPERACIONAIS)) {
     const palavrasQueBateram = config.palavras.filter(p => texto.includes(normalizar(p)));
     if (palavrasQueBateram.length > 0) {
       ancorasEncontradas.push(tema);
       score += config.peso;
-      motivos.push(`âncora: ${tema} (${palavrasQueBateram.slice(0, 3).join(', ')})`);
+      // Adiciona as 2 primeiras palavras no log pra debug
+      motivos.push(`âncora: ${tema} (${palavrasQueBateram.slice(0, 2).join(', ')})`);
     }
   }
-
+  
   // ==========================================================
   // 3. CONTEXTOS — onde/como (confirma operação real)
   // ==========================================================
