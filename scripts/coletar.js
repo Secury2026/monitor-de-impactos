@@ -808,15 +808,19 @@ function determinarCategoria(analise, texto) {
     'caminhoneiros paralisam'
   ].some(t => t2.includes(normalizar(t)));
 
-  const grevePrevista = [
+   const grevePrevista = [
     'greve pode começar', 'greve pode comecar',
-    'greve prevista', 'greve programada',
+    'greve prevista', 'greve programada', 'aviso de greve',
     'ameaça de greve', 'ameaca de greve',
     'caminhoneiros ameaçam', 'caminhoneiros ameacam',
-    'caminhoneiros podem parar',
+    'caminhoneiros podem parar', 'caminhoneiros planejam',
+    'caminhoneiros articulam', 'caminhoneiros preparam',
     'paralisação prevista', 'paralisacao prevista',
-    'sindicato ameaça', 'sindicato ameaca',
-    'risco de greve'
+    'paralisação dos caminhoneiros', 'paralisacao dos caminhoneiros',
+    'sindicato ameaça', 'sindicato ameaca', 'sindicato convoca',
+    'risco de greve', 'risco de paralisação', 'risco de paralisacao',
+    'assembleia para decidir', 'assembleia decide sobre greve',
+    'locautes', 'estado de greve'
   ].some(t => t2.includes(normalizar(t)));
 
   if (pontos.greve > 0 && !greveEmCurso && !grevePrevista) {
@@ -872,6 +876,16 @@ function determinarCategoria(analise, texto) {
     pontos.policial = 0;
   }
 
+  // ---------------- CLIMA SEM VIA VIRA PAINEL INTERNO ----------------
+  const temViaReal = [
+    'rodovia', 'avenida', 'rua', 'pista', 'estrada', 'via',
+    'br-', 'sp-', 'mg-', 'pr-', 'rs-', 'sc-', 'ba-'
+  ].some(t => t2.includes(normalizar(t)));
+
+  if (pontos.clima > 0 && !temViaReal) {
+    pontos.clima = 0;
+  }
+
   // ---------------- SE NADA CONFIRMOU, VAI PRA 'GERAL' ----------------
   const temAlgumaCategoria = Object.values(pontos).some(p => p > 0);
   if (!temAlgumaCategoria) {
@@ -905,7 +919,7 @@ function determinarCategoria(analise, texto) {
       pontos.clima >= pontos.transito - 3 && pontos.clima >= pontos.policial - 3) {
     return 'clima';
   }
-  
+
   return melhor;
 }
 
