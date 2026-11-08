@@ -76,7 +76,7 @@ const PALAVRAS_BLOQUEIO = [
   'moda', 'fofoca', 'receita', 'entretenimento',
   'safra', 'soja', 'milho', 'trigo', 'café', 'cafe', 'plantio', 'colheita', 'agronegócio',
   'vacina', 'hospital', 'câncer', 'cancer', 'pandemia', 'covid',
-  'viralizou', 'viraliza', 'internautas', 'curiosidade', 'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
+  'viralizou', 'viraliza', 'internautas', 'curiosidade',
   
      // Crimes que só mencionam trânsito de passagem (não é operacional)
       'briga de trânsito', 'briga de transito',
@@ -107,6 +107,7 @@ const PALAVRAS_BLOQUEIO = [
   // Aleatórios / Não operacionais
   'aves', 'pássaros', 'passaros', 'animais', 'enem', 'fórmula 1', 'formula 1', 'gp de',
   'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil'
+ 'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
 
 ];
 
