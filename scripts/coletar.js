@@ -98,7 +98,7 @@ const PALAVRAS_BLOQUEIO = [
   'mortes nas estradas', 'mortes no trânsito', 'mortes no transito',
   'estatística', 'estatistica', 'levantamento', 'balanço', 'balanco',
   'disse que', 'afirmou que', 'declarou',
-  'segundo dados', 'de acordo com dados'
+  'segundo dados', 'de acordo com dados',
   
     // Internacional (não afeta operação no Brasil)
   'japão', 'japao', 'eua', 'irã', 'ira', 'flórida', 'florida', 'rússia', 'russia',
@@ -106,7 +106,7 @@ const PALAVRAS_BLOQUEIO = [
   
   // Aleatórios / Não operacionais
   'aves', 'pássaros', 'passaros', 'animais', 'enem', 'fórmula 1', 'formula 1', 'gp de',
-  'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil'
+  'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil',
  'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
 ];
 
