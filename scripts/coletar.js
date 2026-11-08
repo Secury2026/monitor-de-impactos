@@ -108,7 +108,6 @@ const PALAVRAS_BLOQUEIO = [
   'aves', 'pássaros', 'passaros', 'animais', 'enem', 'fórmula 1', 'formula 1', 'gp de',
   'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil'
  'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
-
 ];
 
 // ============================================================
