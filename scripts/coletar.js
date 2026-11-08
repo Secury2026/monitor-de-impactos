@@ -886,15 +886,6 @@ function determinarCategoria(analise, texto) {
     pontos.policial = 0;
   }
 
-  // Se não tem via, mas é previsão ou alerta, mantém o clima
-  const ehPrevisaoOuAlerta = [
-    'previsão', 'previsao', 'alerta', 'aviso', 'defesa civil'
-  ].some(t => t2.includes(normalizar(t)));
-
-  if (pontos.clima > 0 && !temViaReal && !ehPrevisaoOuAlerta) {
-    pontos.clima = 0;
-  }
-
    // ---------------- CLIMA SEM VIA VIRA PAINEL INTERNO ----------------
   const temViaReal = [
     'rodovia', 'avenida', 'rua', 'pista', 'estrada', 'via',
