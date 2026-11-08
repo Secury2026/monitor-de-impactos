@@ -26,6 +26,7 @@ const LIMIARES_POR_CATEGORIA = {
   greve:          35,
   infraestrutura: 30,
   abastecimento:  30,
+  geral:  999,
   padrao:         40
 };
 
@@ -75,7 +76,7 @@ const PALAVRAS_BLOQUEIO = [
   'moda', 'fofoca', 'receita', 'entretenimento',
   'safra', 'soja', 'milho', 'trigo', 'café', 'cafe', 'plantio', 'colheita', 'agronegócio',
   'vacina', 'hospital', 'câncer', 'cancer', 'pandemia', 'covid',
-  'viralizou', 'viraliza', 'internautas', 'curiosidade',
+  'viralizou', 'viraliza', 'internautas', 'curiosidade', 'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
   
      // Crimes que só mencionam trânsito de passagem (não é operacional)
       'briga de trânsito', 'briga de transito',
@@ -98,6 +99,14 @@ const PALAVRAS_BLOQUEIO = [
   'estatística', 'estatistica', 'levantamento', 'balanço', 'balanco',
   'disse que', 'afirmou que', 'declarou',
   'segundo dados', 'de acordo com dados'
+  
+    // Internacional (não afeta operação no Brasil)
+  'japão', 'japao', 'eua', 'irã', 'ira', 'flórida', 'florida', 'rússia', 'russia',
+  'ucrânia', 'ucrania', 'israel', 'china',
+  
+  // Aleatórios / Não operacionais
+  'aves', 'pássaros', 'passaros', 'animais', 'enem', 'fórmula 1', 'formula 1', 'gp de',
+  'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil'
 
 ];
 
@@ -877,13 +886,12 @@ function determinarCategoria(analise, texto) {
     pontos.policial = 0;
   }
 
-  // ---------------- CLIMA SEM VIA VIRA PAINEL INTERNO ----------------
-  const temViaReal = [
-    'rodovia', 'avenida', 'rua', 'pista', 'estrada', 'via',
-    'br-', 'sp-', 'mg-', 'pr-', 'rs-', 'sc-', 'ba-'
+  // Se não tem via, mas é previsão ou alerta, mantém o clima
+  const ehPrevisaoOuAlerta = [
+    'previsão', 'previsao', 'alerta', 'aviso', 'defesa civil'
   ].some(t => t2.includes(normalizar(t)));
 
-  if (pontos.clima > 0 && !temViaReal) {
+  if (pontos.clima > 0 && !temViaReal && !ehPrevisaoOuAlerta) {
     pontos.clima = 0;
   }
 
