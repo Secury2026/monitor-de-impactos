@@ -1177,21 +1177,21 @@ async function analisarNoticiaComIA(titulo, resumo) {
 
   try {
     const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'llama-3.1-8b-instant', // Modelo mais recente e estável
+      model: 'openai/gpt-oss-20b', // Modelo ativo e recomendado pela Groq
       messages: [
         {
           role: 'system',
           content: `Você é um analista de logística da PepsiCo. Classifique a notícia em EXATAMENTE UMA categoria:
-          - clima
-          - transito
-          - greve
-          - policial
-          - infraestrutura
-          - abastecimento
-          - irrelevante
+          - clima (chuvas, temporais, alagamentos)
+          - transito (acidentes, interdições, bloqueios de via)
+          - greve (greves, paralisações, ameaças de caminhoneiros)
+          - policial (roubo de carga, operações, confrontos)
+          - infraestrutura (falta de energia, queda de ponte, vazamentos)
+          - abastecimento (falta de combustível, crise de água)
+          - irrelevante (futebol, política, entretenimento, crimes isolados que não afetam logística)
           
           Se for uma AMEAÇA de greve ou paralisação de caminhoneiros, classifique como "greve".
-          Responda APENAS com um objeto JSON válido, sem explicações, sem marcação markdown (sem \`\`\`json), no formato:
+          Responda APENAS com um objeto JSON válido, sem explicações e sem marcação markdown, no formato:
           {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
         },
         {
@@ -1199,7 +1199,8 @@ async function analisarNoticiaComIA(titulo, resumo) {
           content: `Título: ${titulo}\nResumo: ${resumo}`
         }
       ],
-      temperature: 0.1
+      temperature: 0.1,
+      response_format: { type: "json_object" }
     }, {
       headers: { 
         'Authorization': `Bearer ${apiKey}`,
@@ -1208,16 +1209,15 @@ async function analisarNoticiaComIA(titulo, resumo) {
       timeout: 10000 
     });
 
-    // Pega o texto da IA e limpa possíveis formatações markdown que o modelo possa inventar
     let content = response.data.choices[0].message.content;
+    // Limpeza de segurança para remover formatação markdown que o modelo possa adicionar
     content = content.replace(/```json/g, '').replace(/```/g, '').trim();
     
     return JSON.parse(content);
     
   } catch (error) {
     console.log(`   ⚠️ Erro na IA: ${error.message}`);
-    if (error.response) {
-       // Isso vai imprimir o motivo exato se o Groq rejeitar de novo
+    if (error.response && error.response.data) {
        console.log(`   Detalhe: ${JSON.stringify(error.response.data)}`);
     }
     return null; 
