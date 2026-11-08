@@ -1174,7 +1174,8 @@ async function enviarResumo(noticiasCriticas) {
 async function analisarNoticiaComIA(titulo, resumo) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return null; // Se não tem chave, ignora e usa as regras
+ console.log('   ⚠️ GROQ_API_KEY não configurada no ambiente.');
+    return null; 
   }
 
   try {
@@ -1257,18 +1258,20 @@ if (idadeHoras > 48) {
         let scoreFinal = analise.score;
         let nivelFinal = analise.nivel;
 
-        // Se a notícia passou pela triagem inicial, chama a IA para confirmar
-        if (analise.score > 0) {
+              // Chama a IA se a notícia não foi bloqueada de cara (como futebol/política)
+        // O score menor que -50 significa que bateu em um bloqueio forte
+        if (analise.score > -50) {
           const ia = await analisarNoticiaComIA(titulo, resumo);
           
           if (ia) {
             categoria = ia.categoria;
             scoreFinal = ia.impacto;
             
-               // SE A IA DISSER QUE É IRRELEVANTE, ZERA A NOTA
+            // SE A IA DISSER QUE É IRRELEVANTE, ZERA A NOTA
             if (categoria === 'irrelevante') {
               scoreFinal = 0;
             }
+            
             console.log(`   🤖 IA: Categoria=${categoria} | Impacto=${scoreFinal} (${ia.motivo})`);
           }
         }
