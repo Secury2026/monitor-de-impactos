@@ -895,6 +895,20 @@ function determinarCategoria(analise, texto) {
     pontos.clima = 0;
   }
 
+   // ---------------- CLIMA SEM VIA VIRA PAINEL INTERNO ----------------
+  const temViaReal = [
+    'rodovia', 'avenida', 'rua', 'pista', 'estrada', 'via',
+    'br-', 'sp-', 'mg-', 'pr-', 'rs-', 'sc-', 'ba-'
+  ].some(t => t2.includes(normalizar(t)));
+
+  const ehPrevisaoOuAlerta = [
+    'previsão', 'previsao', 'alerta', 'aviso', 'defesa civil'
+  ].some(t => t2.includes(normalizar(t)));
+
+  if (pontos.clima > 0 && !temViaReal && !ehPrevisaoOuAlerta) {
+    pontos.clima = 0;
+  }
+
   // ---------------- SE NADA CONFIRMOU, VAI PRA 'GERAL' ----------------
   const temAlgumaCategoria = Object.values(pontos).some(p => p > 0);
   if (!temAlgumaCategoria) {
