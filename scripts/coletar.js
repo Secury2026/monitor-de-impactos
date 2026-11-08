@@ -1167,6 +1167,53 @@ async function enviarResumo(noticiasCriticas) {
 // ============================================================
 // COLETA PRINCIPAL
 // ============================================================
+// ============================================================
+// ANÁLISE COM INTELIGÊNCIA ARTIFICIAL (GROQ)
+// ============================================================
+
+async function analisarNoticiaComIA(titulo, resumo) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    return null; // Se não tem chave, ignora e usa as regras
+  }
+
+  try {
+    const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um analista de logística da PepsiCo. Classifique a notícia em EXATAMENTE UMA categoria:
+          - clima (chuvas, temporais, alagamentos)
+          - transito (acidentes, interdições, bloqueios de via)
+          - greve (greves, paralisações, ameaças de caminhoneiros)
+          - policial (roubo de carga, operações, confrontos)
+          - infraestrutura (falta de energia, queda de ponte, vazamentos)
+          - abastecimento (falta de combustível, crise de água)
+          - irrelevante (futebol, política, entretenimento, crimes isolados que não afetam logística)
+          
+          Se for uma AMEAÇA de greve ou paralisação de caminhoneiros, classifique como "greve".
+          Retorne APENAS um objeto JSON no formato:
+          {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
+        },
+        {
+          role: 'user',
+          content: `Título: ${titulo}\nResumo: ${resumo}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.1
+    }, {
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      timeout: 10000 // Desiste se demorar mais de 10s
+    });
+
+    return JSON.parse(response.data.choices[0].message.content);
+  } catch (error) {
+    console.log(`   ⚠️ Erro na IA (usando regras padrão): ${error.message}`);
+    return null; // O Fallback assume e o robô continua
+  }
+}
 
 async function coletarNoticias() {
 
@@ -1202,18 +1249,41 @@ if (idadeHoras > 48) {
   continue;
 }
 
-console.log(`📰 ${titulo.slice(0, 70)}`);
         console.log(`📰 ${titulo.slice(0, 70)}`);
 
-        const analise = calcularRelevancia(titulo, resumo, fonte.nome);
+                const analise = calcularRelevancia(titulo, resumo, fonte.nome);
         const textoCompleto = normalizar(`${titulo} ${resumo}`);
-        const categoria = determinarCategoria(analise, textoCompleto);
+        let categoria = determinarCategoria(analise, textoCompleto);
+        let scoreFinal = analise.score;
+        let nivelFinal = analise.nivel;
 
-        console.log(`   📊 Score: ${analise.score}/100 | ${analise.nivel}`);
+        // Se a notícia passou pela triagem inicial, chama a IA para confirmar
+        if (analise.score > 0) {
+          const ia = await analisarNoticiaComIA(titulo, resumo);
+          
+          if (ia) {
+            categoria = ia.categoria;
+            scoreFinal = ia.impacto;
+            
+               // SE A IA DISSER QUE É IRRELEVANTE, ZERA A NOTA
+            if (categoria === 'irrelevante') {
+              scoreFinal = 0;
+            }
+            console.log(`   🤖 IA: Categoria=${categoria} | Impacto=${scoreFinal} (${ia.motivo})`);
+          }
+        }
+
+        console.log(`   📊 Score Final: ${scoreFinal}/100`);
         console.log(`   🎯 Âncoras: ${analise.ancoras.join(', ') || '—'}`);
-        console.log(`   🌐 Contextos: ${analise.contextos.join(', ') || '—'}`);
-        console.log(`   🧭 Operacional: ${analise.operacionalReal ? 'sim' : 'não'}`);
-        console.log(`   🏷️ Categoria: ${categoria}`);
+        console.log(`   🏷️ Categoria Final: ${categoria}`);
+
+        // Atualiza a análise com os dados da IA
+        analise.score = scoreFinal;
+        if (scoreFinal >= 85) nivelFinal = 'CRÍTICO';
+        else if (scoreFinal >= 70) nivelFinal = 'ALTO';
+        else if (scoreFinal >= 40) nivelFinal = 'MONITORAR';
+        else nivelFinal = 'DESCARTAR';
+        analise.nivel = nivelFinal;
 
         const decisao = decidirPublicacao(textoCompleto, analise, categoria, fonte.nome);
         console.log(`   🚦 ${decisao.status} — ${decisao.motivo}`);
