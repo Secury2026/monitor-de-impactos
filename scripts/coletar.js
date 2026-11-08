@@ -1173,28 +1173,25 @@ async function enviarResumo(noticiasCriticas) {
 
 async function analisarNoticiaComIA(titulo, resumo) {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
- console.log('   ⚠️ GROQ_API_KEY não configurada no ambiente.');
-    return null; 
-  }
+  if (!apiKey) return null;
 
   try {
     const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'llama3-8b-8192',
+      model: 'llama-3.1-8b-instant', // Modelo mais recente e estável
       messages: [
         {
           role: 'system',
           content: `Você é um analista de logística da PepsiCo. Classifique a notícia em EXATAMENTE UMA categoria:
-          - clima (chuvas, temporais, alagamentos)
-          - transito (acidentes, interdições, bloqueios de via)
-          - greve (greves, paralisações, ameaças de caminhoneiros)
-          - policial (roubo de carga, operações, confrontos)
-          - infraestrutura (falta de energia, queda de ponte, vazamentos)
-          - abastecimento (falta de combustível, crise de água)
-          - irrelevante (futebol, política, entretenimento, crimes isolados que não afetam logística)
+          - clima
+          - transito
+          - greve
+          - policial
+          - infraestrutura
+          - abastecimento
+          - irrelevante
           
           Se for uma AMEAÇA de greve ou paralisação de caminhoneiros, classifique como "greve".
-          Retorne APENAS um objeto JSON no formato:
+          Responda APENAS com um objeto JSON válido, sem explicações, sem marcação markdown (sem \`\`\`json), no formato:
           {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
         },
         {
@@ -1202,17 +1199,28 @@ async function analisarNoticiaComIA(titulo, resumo) {
           content: `Título: ${titulo}\nResumo: ${resumo}`
         }
       ],
-      response_format: { type: "json_object" },
       temperature: 0.1
     }, {
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-      timeout: 10000 // Desiste se demorar mais de 10s
+      headers: { 
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000 
     });
 
-    return JSON.parse(response.data.choices[0].message.content);
+    // Pega o texto da IA e limpa possíveis formatações markdown que o modelo possa inventar
+    let content = response.data.choices[0].message.content;
+    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    return JSON.parse(content);
+    
   } catch (error) {
-    console.log(`   ⚠️ Erro na IA (usando regras padrão): ${error.message}`);
-    return null; // O Fallback assume e o robô continua
+    console.log(`   ⚠️ Erro na IA: ${error.message}`);
+    if (error.response) {
+       // Isso vai imprimir o motivo exato se o Groq rejeitar de novo
+       console.log(`   Detalhe: ${JSON.stringify(error.response.data)}`);
+    }
+    return null; 
   }
 }
 
