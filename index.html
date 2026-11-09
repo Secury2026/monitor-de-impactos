@@ -1990,10 +1990,12 @@
         }
     }
 
-    async function refinarTextoComIA(minuto) {
+        async function refinarTextoComIA(minuto) {
+        // Se o navegador não suportar, aborta silenciosamente
+        if (!navigator.gpu) return;
+
         const corpo = document.getElementById('modalMinutoCorpo');
         
-        // Cria a caixinha de aviso no final do modal
         let iaContainer = document.getElementById('ia-container');
         if (!iaContainer) {
             iaContainer = document.createElement('div');
@@ -2010,40 +2012,45 @@
             return;
         }
 
-        iaContainer.innerHTML = '🤖 Refinando o texto...';
+        iaContainer.innerHTML = '🤖 Lendo a notícia e gerando resumo...';
 
-        // PROMPT RÍGIDO
+        // Pega a notícia original que salvamos no objeto minuto
+        const noticia = minuto.noticiaOriginal;
+
+        // NOVO PROMPT: Lê a notícia inteira e gera o resumo
         const prompt = `
-            Você é um revisor de textos da PepsiCo.
-            Sua ÚNICA função é reescrever as informações abaixo de forma mais clara e profissional.
-            REGRA DE OURO: NÃO adicione NENHUMA informação nova. NÃO invente números, ruas ou causas. 
-            Use APENAS o que for fornecido abaixo.
+            Você é um analista de logística da PepsiCo.
+            Leia a notícia abaixo e crie um "Minuto de Prevenção" curto e operacional.
+            
+            Sua resposta deve ter no máximo 4 linhas e seguir EXATAMENTE esta estrutura:
+            - Risco: (O que está acontecendo de fato, baseado na notícia)
+            - Impacto: (Como isso afeta caminhões, entregas ou rotas)
+            - Ação: (O que o gestor ou motorista deve fazer agora)
 
-            Dados originais:
-            - Risco: ${minuto.risco}
-            - Local: ${minuto.local}
-            - Ação: ${minuto.acao}
+            REGRA DE OURO: Baseie-se APENAS no texto da notícia. NÃO invente ruas, números ou causas que não estejam escritos abaixo.
 
-            Reescreva em um parágrafo curto, direto e operacional:
+            Título da Notícia: ${noticia.titulo}
+            Texto da Notícia: ${noticia.resumo}
+            Localização: ${noticia.localidade || 'Não especificada'}
         `;
 
         try {
             const reply = await engine.chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
-                temperature: 0.1,
-                max_tokens: 150
+                temperature: 0.2, // Temperatura baixa para não inventar
+                max_tokens: 200
             });
 
             const textoRefinado = reply.choices[0].message.content;
             
             iaContainer.style.cssText = 'margin-top: 16px; padding: 16px; background: #eff6ff; border-left: 4px solid #6366f1; border-radius: 8px; color: #1e3a8a; font-size: 0.85rem; line-height: 1.6;';
-            iaContainer.innerHTML = `<strong style="color:#4f46e5;">🤖 Resumo Refinado:</strong><br><br><span style="white-space: pre-wrap;">${textoRefinado}</span>`;
+            iaContainer.innerHTML = `<strong style="color:#4f46e5;">🤖 Resumo Contextualizado:</strong><br><br><span style="white-space: pre-wrap;">${textoRefinado}</span>`;
 
         } catch (error) {
             console.error("Erro na geração da IA:", error);
-            iaContainer.innerHTML = '⚠️ Não foi possível refinar o texto no momento.';
+            iaContainer.innerHTML = '⚠️ Não foi possível gerar o resumo no momento.';
         } finally {
-            // Desliga a IA da memória após 3 minutos
+            // Timer: Desliga a IA da memória após 3 minutos
             if (timerDescarregarIA) clearTimeout(timerDescarregarIA);
             timerDescarregarIA = setTimeout(() => {
                 if (iaEngine) {
@@ -2054,7 +2061,6 @@
             }, 3 * 60 * 1000);
         }
     }
-
     function fecharMinuto() {
         document.getElementById('modalMinuto').classList.remove('ativo');
         minutoAtual = null;
