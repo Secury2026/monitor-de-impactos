@@ -1309,8 +1309,8 @@ if (idadeHoras > 48) {
             console.log(`   🤖 IA: Categoria=${categoria} | Impacto=${scoreFinal} (${ia.motivo})`);
           }
         
-          // 👇 ADICIONE ESTA PAUSA DE 2 SEGUNDOS AQUI 👇
-          await new Promise(resolve => setTimeout(resolve, 3500));
+          // 👇 ADICIONE ESTA PAUSA DE 10 SEGUNDOS AQUI 👇
+          await new Promise(resolve => setTimeout(resolve, 10000));
         }
 
         console.log(`   📊 Score Final: ${scoreFinal}/100`);
