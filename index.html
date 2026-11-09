@@ -1990,8 +1990,7 @@
         }
     }
 
-        async function refinarTextoComIA(minuto) {
-        // Se o navegador não suportar, aborta silenciosamente
+           async function refinarTextoComIA(minuto) {
         if (!navigator.gpu) return;
 
         const corpo = document.getElementById('modalMinutoCorpo');
@@ -2012,45 +2011,60 @@
             return;
         }
 
-        iaContainer.innerHTML = '🤖 Lendo a notícia e gerando resumo...';
+        iaContainer.innerHTML = '🤖 Analisando a notícia e gerando resumo...';
 
-        // Pega a notícia original que salvamos no objeto minuto
         const noticia = minuto.noticiaOriginal;
 
-        // NOVO PROMPT: Lê a notícia inteira e gera o resumo
-        const prompt = `
-            Você é um analista de logística da PepsiCo.
-            Leia a notícia abaixo e crie um "Minuto de Prevenção" curto e operacional.
-            
-            Sua resposta deve ter no máximo 4 linhas e seguir EXATAMENTE esta estrutura:
-            - Risco: (O que está acontecendo de fato, baseado na notícia)
-            - Impacto: (Como isso afeta caminhões, entregas ou rotas)
-            - Ação: (O que o gestor ou motorista deve fazer agora)
+        // NOVO PROMPT: Pede para a IA devolver os 3 campos em formato JSON
+        const prompt = `<|im_start|>system
+Você é um analista de risco logístico da PepsiCo. Leia a notícia e gere três informações.
+Responda APENAS com um objeto JSON válido, sem marcação markdown, contendo as chaves "resumo", "risco" e "acao".
+- "resumo": Um parágrafo descritivo de 3 a 4 linhas contando o que aconteceu, citando a via, o km e o impacto no trânsito.
+- "risco": Uma frase curta e direta explicando o perigo principal (ex: Via interditada, Risco de alagamento, Bloqueio por greve).
+- "acao": Uma frase curta sugerindo o que a equipe deve fazer (ex: Usar rota alternativa, Antecipar entregas, Evitar a região).
 
-            REGRA DE OURO: Baseie-se APENAS no texto da notícia. NÃO invente ruas, números ou causas que não estejam escritos abaixo.
-
-            Título da Notícia: ${noticia.titulo}
-            Texto da Notícia: ${noticia.resumo}
-            Localização: ${noticia.localidade || 'Não especificada'}
-        `;
+Exemplo de resposta: 
+{"resumo": "Um caminhão colidiu na traseira de uma carreta na SP-300, km 73. O acostamento foi interditado, gerando 3 km de lentidão no trecho.", "risco": "Via parcialmente interditada e trânsito lento", "acao": "Utilizar rota alternativa e prever atraso nas entregas"}
+<|im_end|>
+<|im_start|>user
+Título: ${noticia.titulo}
+Resumo: ${noticia.resumo}
+<|im_end|>
+<|im_start|>assistant
+`;
 
         try {
             const reply = await engine.chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
-                temperature: 0.2, // Temperatura baixa para não inventar
-                max_tokens: 200
+                temperature: 0.1, 
+                max_tokens: 250
             });
 
-            const textoRefinado = reply.choices[0].message.content;
+            let content = reply.choices[0].message.content;
+            // Limpa caso a IA envie formatação markdown
+            content = content.replace(/```json/g, '').replace(/```/g, '').trim();
             
+            // Transforma o texto em um objeto JavaScript
+            let iaData = JSON.parse(content);
+
+            // Salva as respostas da IA no nosso estado do modal
+            minutoAtual.textoIA = iaData.resumo;
+            minutoAtual.riscoIA = iaData.risco;
+            minutoAtual.acaoIA = iaData.acao;
+            
+            // Atualiza a caixinha no modal com as novas informações
             iaContainer.style.cssText = 'margin-top: 16px; padding: 16px; background: #eff6ff; border-left: 4px solid #6366f1; border-radius: 8px; color: #1e3a8a; font-size: 0.85rem; line-height: 1.6;';
-            iaContainer.innerHTML = `<strong style="color:#4f46e5;">🤖 Resumo Contextualizado:</strong><br><br><span style="white-space: pre-wrap;">${textoRefinado}</span>`;
+            iaContainer.innerHTML = `
+                <strong style="color:#4f46e5;">🤖 Análise Refinada (Copiar já atualizado):</strong><br><br>
+                <strong>Risco:</strong> ${iaData.risco}<br>
+                <strong>Ação:</strong> ${iaData.acao}<br><br>
+                <strong>Resumo:</strong><br><span style="white-space: pre-wrap;">${iaData.resumo}</span>
+            `;
 
         } catch (error) {
             console.error("Erro na geração da IA:", error);
             iaContainer.innerHTML = '⚠️ Não foi possível gerar o resumo no momento.';
         } finally {
-            // Timer: Desliga a IA da memória após 3 minutos
             if (timerDescarregarIA) clearTimeout(timerDescarregarIA);
             timerDescarregarIA = setTimeout(() => {
                 if (iaEngine) {
@@ -2066,24 +2080,28 @@
         minutoAtual = null;
     }
 
-    function copiarMinuto() {
+       function copiarMinuto() {
         if (!minutoAtual) return;
 
-        var m = minutoAtual;
-        var texto =
+        // Se a IA gerou textos, usa eles. Se não, usa as regras padrão.
+        const resumoFinal = (minutoAtual.textoIA) ? minutoAtual.textoIA : minutoAtual.resumo;
+        const riscoFinal = (minutoAtual.riscoIA) ? minutoAtual.riscoIA : minutoAtual.risco;
+        const acaoFinal = (minutoAtual.acaoIA) ? minutoAtual.acaoIA : minutoAtual.acao;
+
+        var textoParaCopiar =
             '⚠️ MINUTO DE PREVENÇÃO\n\n' +
-            '📅 ' + m.data + '\n' +
-            '🏷️ ' + m.catLabel + '\n' +
-            '📍 Local: ' + m.local + '\n' +
-            (m.rodovia ? '🛣️ Rodovia: ' + m.rodovia.toUpperCase() + '\n' : '') +
-            '📰 Fonte: ' + m.fonte + '\n\n' +
-            '📋 Resumo:\n' + m.resumo + '\n\n' +
-            '🎯 Risco: ' + m.risco + '\n' +
-            '🚫 Ação: ' + m.acao + '\n\n' +
-            '🔗 ' + m.link;
+            '📅 ' + minutoAtual.data + '\n' +
+            '🏷️ ' + minutoAtual.catLabel + '\n' +
+            '📍 Local: ' + minutoAtual.local + '\n' +
+            (minutoAtual.rodovia ? '🛣️ Rodovia: ' + minutoAtual.rodovia.toUpperCase() + '\n' : '') +
+            '📰 Fonte: ' + minutoAtual.fonte + '\n\n' +
+            '📋 Resumo:\n' + resumoFinal + '\n\n' + 
+            '🎯 Risco: ' + riscoFinal + '\n' +
+            '🚫 Ação: ' + acaoFinal + '\n\n' +
+            '🔗 ' + minutoAtual.link;
 
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(texto).then(function() {
+            navigator.clipboard.writeText(textoParaCopiar).then(function() {
                 var btn = document.getElementById('btnCopiarMinuto');
                 var original = btn.innerHTML;
                 btn.innerHTML = '✅ Copiado!';
@@ -2091,12 +2109,12 @@
                 setTimeout(function() {
                     btn.innerHTML = original;
                     btn.classList.remove('copiado');
-                }, 2000);
+                }, 2500);
             }).catch(function() {
-                prompt('Copie manualmente:', texto);
+                prompt('Copie manualmente:', textoParaCopiar);
             });
         } else {
-            prompt('Copie manualmente:', texto);
+            prompt('Copie manualmente:', textoParaCopiar);
         }
     }
 
