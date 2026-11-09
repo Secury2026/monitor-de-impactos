@@ -1,4 +1,4 @@
-// ============================================================
+F// ============================================================
 // MONITOR DE IMPACTOS - COLETOR OPERACIONAL v4.0
 // ============================================================
 
@@ -85,7 +85,7 @@ const PALAVRAS_BLOQUEIO = [
   // Eventos que JÁ ACABARAM / via liberada
   'via foi liberada', 'pista foi liberada', 'trânsito liberado', 'transito liberado', 
   'liberada às', 'liberada as', 'já foi liberada', 'ja foi liberada',
-  'fim do bloqueio', 'normalizado', 'totalmente liberada'
+  'fim do bloqueio', 'normalizado', 'totalmente liberada',
   
      // Crimes que só mencionam trânsito de passagem (não é operacional)
       'briga de trânsito', 'briga de transito',
