@@ -17,6 +17,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+       <script type="module">
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+        window.webllm = webllm;
+    </script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -2066,9 +2070,10 @@
         <div class="modal-corpo" id="modalMinutoCorpo">
             <!-- conteúdo gerado pelo JS -->
         </div>
-        <div class="modal-acoes">
+               <div class="modal-acoes">
             <button class="modal-btn" id="btnCopiarMinuto" onclick="copiarMinuto()">📤 Copiar minuto</button>
             <button class="modal-btn secundario" onclick="fecharMinuto()">Fechar</button>
+        </div>
         </div>
     </div>
 </div>
