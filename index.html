@@ -1962,10 +1962,97 @@
 
         corpo.innerHTML = html;
 
-        var modal = document.getElementById('modalMinutoConteudo');
+                var modal = document.getElementById('modalMinutoConteudo');
         modal.className = 'modal-minuto sev-' + m.severidade;
 
+        // 👇 CHAMA A IA EM SEGUNDO PLANO 👇
+        refinarTextoComIA(m);
+
         document.getElementById('modalMinuto').classList.add('ativo');
+    }
+        // ============================================================
+    // IA LOCAL AUTOMÁTICA (Refinamento sem Alucinação)
+    // ============================================================
+    let iaEngine = null;
+    let timerDescarregarIA = null;
+
+    async function iniciarIA() {
+        if (iaEngine) return iaEngine;
+        if (!navigator.gpu) return null; // Se o navegador não suportar, nem tenta
+
+        try {
+            // Inicia o motor (baixa o modelo na primeira vez)
+            iaEngine = await window.webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC");
+            return iaEngine;
+        } catch (error) {
+            console.error("Erro ao carregar IA:", error);
+            return null;
+        }
+    }
+
+    async function refinarTextoComIA(minuto) {
+        const corpo = document.getElementById('modalMinutoCorpo');
+        
+        // Cria a caixinha de aviso no final do modal
+        let iaContainer = document.getElementById('ia-container');
+        if (!iaContainer) {
+            iaContainer = document.createElement('div');
+            iaContainer.id = 'ia-container';
+            corpo.appendChild(iaContainer);
+        }
+        
+        iaContainer.style.cssText = 'margin-top: 16px; padding: 16px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-size: 0.85rem; text-align: center;';
+        iaContainer.innerHTML = '⏳ Preparando assistente de IA...';
+
+        const engine = await iniciarIA();
+        if (!engine) {
+            iaContainer.innerHTML = '⚠️ IA indisponível neste dispositivo. (Requer Chrome/Edge atualizado)';
+            return;
+        }
+
+        iaContainer.innerHTML = '🤖 Refinando o texto...';
+
+        // PROMPT RÍGIDO
+        const prompt = `
+            Você é um revisor de textos da PepsiCo.
+            Sua ÚNICA função é reescrever as informações abaixo de forma mais clara e profissional.
+            REGRA DE OURO: NÃO adicione NENHUMA informação nova. NÃO invente números, ruas ou causas. 
+            Use APENAS o que for fornecido abaixo.
+
+            Dados originais:
+            - Risco: ${minuto.risco}
+            - Local: ${minuto.local}
+            - Ação: ${minuto.acao}
+
+            Reescreva em um parágrafo curto, direto e operacional:
+        `;
+
+        try {
+            const reply = await engine.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.1,
+                max_tokens: 150
+            });
+
+            const textoRefinado = reply.choices[0].message.content;
+            
+            iaContainer.style.cssText = 'margin-top: 16px; padding: 16px; background: #eff6ff; border-left: 4px solid #6366f1; border-radius: 8px; color: #1e3a8a; font-size: 0.85rem; line-height: 1.6;';
+            iaContainer.innerHTML = `<strong style="color:#4f46e5;">🤖 Resumo Refinado:</strong><br><br><span style="white-space: pre-wrap;">${textoRefinado}</span>`;
+
+        } catch (error) {
+            console.error("Erro na geração da IA:", error);
+            iaContainer.innerHTML = '⚠️ Não foi possível refinar o texto no momento.';
+        } finally {
+            // Desliga a IA da memória após 3 minutos
+            if (timerDescarregarIA) clearTimeout(timerDescarregarIA);
+            timerDescarregarIA = setTimeout(() => {
+                if (iaEngine) {
+                    console.log("🧹 Descarregando IA para economizar memória.");
+                    iaEngine.unload();
+                    iaEngine = null;
+                }
+            }, 3 * 60 * 1000);
+        }
     }
 
     function fecharMinuto() {
