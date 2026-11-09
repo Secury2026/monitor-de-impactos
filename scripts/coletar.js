@@ -118,6 +118,15 @@ const PALAVRAS_BLOQUEIO = [
   
   // Consumo já ocorrido (se já estão sem, não ajuda prever)
   'já estão sem água', 'estão sem luz', 'há dias sem água', 'há dias sem luz'
+
+    // Protestos civis (não são greves de caminhoneiros)
+  'protesto', 'protestam', 'manifestantes', 'manifestação', 'manifestacao', 
+  'moradores bloqueiam', 'ato público', 'ato publico',
+
+  // Eventos que JÁ ACABARAM / via liberada
+  'via foi liberada', 'pista foi liberada', 'trânsito liberado', 'transito liberado', 
+  'liberada às', 'liberada as', 'já foi liberada', 'ja foi liberada',
+  'fim do bloqueio', 'normalizado', 'totalmente liberada'
 ];
 
 // ============================================================
@@ -1195,13 +1204,14 @@ async function analisarNoticiaComIA(titulo, resumo) {
 
           CATEGORIAS PERMITIDAS: clima, transito, greve, policial, infraestrutura, abastecimento, irrelevante.
 
-          REGRAS DE OURO (SIGA RIGOROSAMENTE):
-          1. "irrelevante" (Impacto 0): Futebol, política (ex: corrupção, contratos, vereadores presos), celebridades, crimes domésticos/isolados, acidentes com carros de passeio (sem caminhão), dicas de trânsito/seguros, e reportagens mostrando que a água/luz JÁ acabou.
-          2. "clima": Foque em alertas de temporal, chuvas fortes, granizo e ventos. Previsão de sol/nublado é Impacto 0. Artigos de "como se proteger" são Impacto 0.
-          3. "transito": Acidentes com CAMINHÕES/CARRETAS, ou bloqueio de vias (parcial ou total, em um ou ambos os sentidos). Batidas simples de carros de passeio são Impacto 0.
-          4. "policial": FOCO EM SEGURANÇA. Roubo de carga, bloqueios de facções e, CRUCIALMENTE, operações policiais em favelas/comunidades (pois geram risco de confronto/tiroteio e afetam a segurança dos vendedores na rua). Notícias sobre "prisão de político" são irrelevantes.
-          5. "abastecimento" / "infraestrutura": SÓ classifique se for um AVISO/PREVISÃO de falta (ex: "risco de racionamento", "reservatório em nível crítico", "risco de apagão"). Se a notícia diz que os moradores já estão sem água/luz há dias, é "irrelevante".
+        REGRAS DE OURO (SIGA RIGOROSAMENTE):
+          1. "irrelevante" (Impacto 0): Futebol, política (corrupção, contratos, vereadores presos), celebridades, dicas de trânsito, artigos de seguro, e "como fazer". CRIMES ISOLADOS (homicídios, "homem morto a tiros", brigas, crimes domésticos). Acidentes com carros de passeio (sem caminhão). Reportagens mostrando que a água/luz JÁ acabou. E, CRUCIALMENTE: Notícias no PASSADO que terminam dizendo que a via foi liberada, que o trânsito já normalizou, ou protestos de moradores que já acabaram.
+          2. "clima": Foque em alertas de temporal, chuvas fortes, granizo e ventos. Previsão de sol/nublado é Impacto 0. Artigos de "como se proteger" são Impacto 0. Se o temporal já passou e a notícia é sobre estragos antigos, é Impacto 0.
+          3. "transito": Acidentes com CAMINHÕES/CARRETAS que AINDA estão bloqueando a via, ou bloqueio de vias (parcial ou total). Batidas simples de carros de passeio são Impacto 0.
+          4. "policial": FOCO EXCLUSIVO EM SEGURANÇA E CARGA. Roubo de carga, bloqueios de facções e, CRUCIALMENTE, operações policiais em favelas/comunidades (pois geram risco de confronto/tiroteio para os vendedores). Qualquer outro crime urbano ou prisão de político é "irrelevante".
+          5. "abastecimento" / "infraestrutura": SÓ classifique se for um AVISO/PREVISÃO de falta (ex: "risco de racionamento", "reservatório em nível crítico", "risco de apagão"). Se a notícia diz que os moradores já estão sem água/luz há dias, ou estão protestando por isso, é "irrelevante".
           6. "greve": Qualquer menção a caminhoneiros, paralisação de transporte ou fábrica, mesmo que seja apenas uma AMEAÇA.
+
 
           Exemplos de IRRELEVANTE (Impacto 0): "Vereador preso", "Contrato de Wi-Fi cancelado", "Como trocar pneu", "Temporal: seguro cobre?", "Mãe mata filho".
           Exemplos de RELEVANTE: "Carreta tomba na BR-381", "Risco de racionamento de água em SP", "Operação policial no Complexo do Alemão", "Greve de caminhoneiros ameaça entrega".
