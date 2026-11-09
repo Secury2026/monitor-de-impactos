@@ -1207,7 +1207,8 @@ async function analisarNoticiaComIA(titulo, resumo) {
           Exemplos de RELEVANTE: "Carreta tomba na BR-381", "Risco de racionamento de água em SP", "Operação policial no Complexo do Alemão", "Greve de caminhoneiros ameaça entrega".
 
           Responda APENAS com um objeto JSON válido:
-          {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
+        {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
+        },
         {
           role: 'user',
           content: `Título: ${titulo}\nResumo: ${resumo}`
