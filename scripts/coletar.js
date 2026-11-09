@@ -108,6 +108,16 @@ const PALAVRAS_BLOQUEIO = [
   'aves', 'pássaros', 'passaros', 'animais', 'enem', 'fórmula 1', 'formula 1', 'gp de',
   'racha', 'aposta', 'loteria', 'mega-sena', 'lotofácil', 'lotofacil',
  'droga', 'drogas', 'entorpecente', 'maconha', 'cocaína', 'cocaina', 'cadeirinha',
+  
+   // Dicas, seguros e artigos irrelevantes
+  'seguro cobre', 'regra dos', 'como trocar', 'dicas para', 'o que fazer se',
+  'veja como', 'saiba como',
+  
+  // Política / contratos (Não é risco operacional de rua)
+  'contrato de r$', 'licitação', 'vereadores', 'prefeito assina',
+  
+  // Consumo já ocorrido (se já estão sem, não ajuda prever)
+  'já estão sem água', 'estão sem luz', 'há dias sem água', 'há dias sem luz'
 ];
 
 // ============================================================
@@ -1181,19 +1191,23 @@ async function analisarNoticiaComIA(titulo, resumo) {
       messages: [
         {
           role: 'system',
-          content: `Você é um analista de logística da PepsiCo. Classifique a notícia em EXATAMENTE UMA categoria:
-          - clima (chuvas, temporais, alagamentos)
-          - transito (acidentes, interdições, bloqueios de via)
-          - greve (greves, paralisações, ameaças de caminhoneiros)
-          - policial (roubo de carga, operações, confrontos)
-          - infraestrutura (falta de energia, queda de ponte, vazamentos)
-          - abastecimento (falta de combustível, crise de água)
-          - irrelevante (futebol, política, entretenimento, crimes isolados que não afetam logística)
-          
-          Se for uma AMEAÇA de greve ou paralisação de caminhoneiros, classifique como "greve".
-          Responda APENAS com um objeto JSON válido, sem explicações e sem marcação markdown, no formato:
+                  content: `Você é um analista de risco logístico da PepsiCo. Sua função é ler notícias e classificar se elas representam um RISCO FUTURO ou IMPACTO ATUAL para a operação, rotas e segurança dos funcionários.
+
+          CATEGORIAS PERMITIDAS: clima, transito, greve, policial, infraestrutura, abastecimento, irrelevante.
+
+          REGRAS DE OURO (SIGA RIGOROSAMENTE):
+          1. "irrelevante" (Impacto 0): Futebol, política (ex: corrupção, contratos, vereadores presos), celebridades, crimes domésticos/isolados, acidentes com carros de passeio (sem caminhão), dicas de trânsito/seguros, e reportagens mostrando que a água/luz JÁ acabou.
+          2. "clima": Foque em alertas de temporal, chuvas fortes, granizo e ventos. Previsão de sol/nublado é Impacto 0. Artigos de "como se proteger" são Impacto 0.
+          3. "transito": Acidentes com CAMINHÕES/CARRETAS, ou bloqueio de vias (parcial ou total, em um ou ambos os sentidos). Batidas simples de carros de passeio são Impacto 0.
+          4. "policial": FOCO EM SEGURANÇA. Roubo de carga, bloqueios de facções e, CRUCIALMENTE, operações policiais em favelas/comunidades (pois geram risco de confronto/tiroteio e afetam a segurança dos vendedores na rua). Notícias sobre "prisão de político" são irrelevantes.
+          5. "abastecimento" / "infraestrutura": SÓ classifique se for um AVISO/PREVISÃO de falta (ex: "risco de racionamento", "reservatório em nível crítico", "risco de apagão"). Se a notícia diz que os moradores já estão sem água/luz há dias, é "irrelevante".
+          6. "greve": Qualquer menção a caminhoneiros, paralisação de transporte ou fábrica, mesmo que seja apenas uma AMEAÇA.
+
+          Exemplos de IRRELEVANTE (Impacto 0): "Vereador preso", "Contrato de Wi-Fi cancelado", "Como trocar pneu", "Temporal: seguro cobre?", "Mãe mata filho".
+          Exemplos de RELEVANTE: "Carreta tomba na BR-381", "Risco de racionamento de água em SP", "Operação policial no Complexo do Alemão", "Greve de caminhoneiros ameaça entrega".
+
+          Responda APENAS com um objeto JSON válido:
           {"categoria": "nome", "impacto": 0-100, "motivo": "explicação curta"}`
-        },
         {
           role: 'user',
           content: `Título: ${titulo}\nResumo: ${resumo}`
@@ -1284,7 +1298,7 @@ if (idadeHoras > 48) {
           }
         
           // 👇 ADICIONE ESTA PAUSA DE 2 SEGUNDOS AQUI 👇
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 3500));
         }
 
         console.log(`   📊 Score Final: ${scoreFinal}/100`);
