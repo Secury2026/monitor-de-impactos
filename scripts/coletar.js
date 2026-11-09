@@ -78,6 +78,15 @@ const PALAVRAS_BLOQUEIO = [
   'vacina', 'hospital', 'câncer', 'cancer', 'pandemia', 'covid',
   'viralizou', 'viraliza', 'internautas', 'curiosidade',
   
+      // Protestos civis (não são greves de caminhoneiros)
+  'protesto', 'protestam', 'manifestantes', 'manifestação', 'manifestacao', 
+  'moradores bloqueiam', 'ato público', 'ato publico',
+
+  // Eventos que JÁ ACABARAM / via liberada
+  'via foi liberada', 'pista foi liberada', 'trânsito liberado', 'transito liberado', 
+  'liberada às', 'liberada as', 'já foi liberada', 'ja foi liberada',
+  'fim do bloqueio', 'normalizado', 'totalmente liberada'
+  
      // Crimes que só mencionam trânsito de passagem (não é operacional)
       'briga de trânsito', 'briga de transito',
       'discussão de trânsito', 'discussao de transito',
@@ -119,14 +128,6 @@ const PALAVRAS_BLOQUEIO = [
   // Consumo já ocorrido (se já estão sem, não ajuda prever)
   'já estão sem água', 'estão sem luz', 'há dias sem água', 'há dias sem luz'
 
-    // Protestos civis (não são greves de caminhoneiros)
-  'protesto', 'protestam', 'manifestantes', 'manifestação', 'manifestacao', 
-  'moradores bloqueiam', 'ato público', 'ato publico',
-
-  // Eventos que JÁ ACABARAM / via liberada
-  'via foi liberada', 'pista foi liberada', 'trânsito liberado', 'transito liberado', 
-  'liberada às', 'liberada as', 'já foi liberada', 'ja foi liberada',
-  'fim do bloqueio', 'normalizado', 'totalmente liberada'
 ];
 
 // ============================================================
