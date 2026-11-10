@@ -1144,7 +1144,7 @@ async function enviarResumo(noticiasCriticas) {
     listaCategorias += `<li><strong>${emoji} ${categoria}</strong>: ${quantidade}</li>`;
   }
 
-  const linkSite = 'https://rapzxyok2019-prog.github.io/monitor-de-impactos/';
+  const linkSite = 'https://secury2026.github.io/monitor-de-impactos/';
   const assunto = `🚨 ${total} alerta(s) operacional(is) - Monitor PepsiCo`;
 
   const mensagemHtml = `
