@@ -1990,7 +1990,7 @@
         }
     }
 
-           async function refinarTextoComIA(minuto) {
+                  async function refinarTextoComIA(minuto) {
         if (!navigator.gpu) return;
 
         const corpo = document.getElementById('modalMinutoCorpo');
@@ -2007,55 +2007,57 @@
 
         const engine = await iniciarIA();
         if (!engine) {
-            iaContainer.innerHTML = '⚠️ IA indisponível neste dispositivo. (Requer Chrome/Edge atualizado)';
+            iaContainer.innerHTML = '⚠️ IA indisponível neste dispositivo.';
             return;
         }
 
-        iaContainer.innerHTML = '🤖 Analisando a notícia e gerando resumo...';
+        iaContainer.innerHTML = '🤖 Analisando a notícia (isso pode levar até 30s no celular)...';
 
         const noticia = minuto.noticiaOriginal;
 
-        // NOVO PROMPT: Pede para a IA devolver os 3 campos em formato JSON
-        const prompt = `<|im_start|>system
-Você é um analista de risco logístico da PepsiCo. Leia a notícia e gere três informações.
-Responda APENAS com um objeto JSON válido, sem marcação markdown, contendo as chaves "resumo", "risco" e "acao".
-- "resumo": Um parágrafo descritivo de 3 a 4 linhas contando o que aconteceu, citando a via, o km e o impacto no trânsito.
-- "risco": Uma frase curta e direta explicando o perigo principal (ex: Via interditada, Risco de alagamento, Bloqueio por greve).
-- "acao": Uma frase curta sugerindo o que a equipe deve fazer (ex: Usar rota alternativa, Antecipar entregas, Evitar a região).
+        // Prompt simplificado e direto. Sem marcadores complexos.
+        const prompt = `Leia a notícia e responda APENAS com um JSON válido (sem explicações).
+Formato exato: {"resumo": "texto do resumo", "risco": "texto do risco", "acao": "texto da ação"}
+O resumo deve ter 3 linhas citando a via e o impacto. O risco e a ação devem ser curtos.
 
-Exemplo de resposta: 
-{"resumo": "Um caminhão colidiu na traseira de uma carreta na SP-300, km 73. O acostamento foi interditado, gerando 3 km de lentidão no trecho.", "risco": "Via parcialmente interditada e trânsito lento", "acao": "Utilizar rota alternativa e prever atraso nas entregas"}
-<|im_end|>
-<|im_start|>user
 Título: ${noticia.titulo}
-Resumo: ${noticia.resumo}
-<|im_end|>
-<|im_start|>assistant
-`;
+Resumo: ${noticia.resumo}`;
 
         try {
             const reply = await engine.chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
                 temperature: 0.1, 
-                max_tokens: 250
+                max_tokens: 300 // Aumentado para dar espaço de terminar o JSON
             });
 
             let content = reply.choices[0].message.content;
-            // Limpa caso a IA envie formatação markdown
+            console.log("Resposta bruta da IA:", content); // Se der erro, olhe no console
+
+            // Limpeza para remover formatações que a IA possa ter colocado
             content = content.replace(/```json/g, '').replace(/```/g, '').trim();
             
-            // Transforma o texto em um objeto JavaScript
-            let iaData = JSON.parse(content);
+            // Tenta transformar em JSON
+            let iaData;
+            try {
+                iaData = JSON.parse(content);
+            } catch (e) {
+                // PLANO B: Se o JSON falhar, tenta extrair o texto usando expressões regulares
+                console.warn("JSON falhou. Usando extração manual.");
+                iaData = {
+                    resumo: content.match(/"resumo":\s*"(.*?)"/s)?.[1] || "Resumo não pôde ser gerado.",
+                    risco: content.match(/"risco":\s*"(.*?)"/s)?.[1] || minuto.risco,
+                    acao: content.match(/"acao":\s*"(.*?)"/s)?.[1] || minuto.acao
+                };
+            }
 
-            // Salva as respostas da IA no nosso estado do modal
+            // Salva as respostas
             minutoAtual.textoIA = iaData.resumo;
             minutoAtual.riscoIA = iaData.risco;
             minutoAtual.acaoIA = iaData.acao;
             
-            // Atualiza a caixinha no modal com as novas informações
             iaContainer.style.cssText = 'margin-top: 16px; padding: 16px; background: #eff6ff; border-left: 4px solid #6366f1; border-radius: 8px; color: #1e3a8a; font-size: 0.85rem; line-height: 1.6;';
             iaContainer.innerHTML = `
-                <strong style="color:#4f46e5;">🤖 Análise Refinada (Copiar já atualizado):</strong><br><br>
+                <strong style="color:#4f46e5;">🤖 Análise Concluída:</strong><br><br>
                 <strong>Risco:</strong> ${iaData.risco}<br>
                 <strong>Ação:</strong> ${iaData.acao}<br><br>
                 <strong>Resumo:</strong><br><span style="white-space: pre-wrap;">${iaData.resumo}</span>
@@ -2063,12 +2065,11 @@ Resumo: ${noticia.resumo}
 
         } catch (error) {
             console.error("Erro na geração da IA:", error);
-            iaContainer.innerHTML = '⚠️ Não foi possível gerar o resumo no momento.';
+            iaContainer.innerHTML = '⚠️ A IA local demorou muito para responder. Tente novamente.';
         } finally {
             if (timerDescarregarIA) clearTimeout(timerDescarregarIA);
             timerDescarregarIA = setTimeout(() => {
                 if (iaEngine) {
-                    console.log("🧹 Descarregando IA para economizar memória.");
                     iaEngine.unload();
                     iaEngine = null;
                 }
